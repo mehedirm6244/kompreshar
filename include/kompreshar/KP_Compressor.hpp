@@ -1,9 +1,11 @@
-#ifndef KPCOMPRESSOR_HPP
-#define KPCOMPRESSOR_HPP
+#ifndef KP_COMPRESSOR_HPP
+#define KP_COMPRESSOR_HPP
 
 #include <string>
+#include <vector>
+#include <cstdint>
 
-class KPCompressor {
+class KP_Compressor {
 private:
   std::string read_file(const std::string& filepath, bool binary_mode);
   bool write_file(const std::string& filepath, const std::vector<uint8_t>& data);
@@ -18,4 +20,4 @@ public:
   void decompress_file(std::string& data);
 };
 
-#endif // KPCOMPRESSOR_HPP
+#endif // KP_COMPRESSOR_HPP

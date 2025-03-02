@@ -1,11 +1,11 @@
-#ifndef KPWINDOW_HPP
-#define KPWINDOW_HPP
+#ifndef KP_WINDOW_HPP
+#define KP_WINDOW_HPP
 
 #include <gtkmm.h>
 
-#include "KPCompressor.cpp"
+#include <kompreshar/KP_Compressor.hpp>
 
-class KPWindow : public Gtk::Window {
+class KP_Window : public Gtk::Window {
 private:
   Gtk::Box m_main_box{Gtk::ORIENTATION_VERTICAL, 12};
   Gtk::Box m_control_box{Gtk::ORIENTATION_HORIZONTAL, 6};
@@ -15,14 +15,14 @@ private:
   Gtk::Button m_btn_compress;
   Gtk::Button m_btn_decompress;
 
-  KPCompressor m_compressor;
+  KP_Compressor m_compressor;
 
   void handle_sig_compress();
   void handle_sig_decompress();
 
 public:
-  KPWindow();
-  ~KPWindow();
+  KP_Window();
+  ~KP_Window();
 };
 
-#endif // KPWINDOW_HPP
+#endif // KP_WINDOW_HPP

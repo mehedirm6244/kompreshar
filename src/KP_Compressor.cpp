@@ -1,4 +1,4 @@
-#include "KPCompressor.hpp"
+#include <kompreshar/KP_Compressor.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -7,8 +7,9 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <cstdint>
 
-std::string KPCompressor::read_file(const std::string& filepath, bool binary_mode) {
+std::string KP_Compressor::read_file(const std::string& filepath, bool binary_mode) {
   std::ifstream file(filepath, binary_mode ? std::ios::binary : std::ios::in);
   if (!file) {
     std::cerr << "Failed to open file: " << filepath << std::endl;
@@ -18,7 +19,7 @@ std::string KPCompressor::read_file(const std::string& filepath, bool binary_mod
   return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
 }
 
-bool KPCompressor::write_file(const std::string& filepath,
+bool KP_Compressor::write_file(const std::string& filepath,
   const std::vector<uint8_t>& data) {
   std::ofstream file(filepath, std::ios::binary);
   if (!file) {
@@ -30,7 +31,7 @@ bool KPCompressor::write_file(const std::string& filepath,
   return true;
 }
 
-void KPCompressor::compress_file(std::string& filepath) {
+void KP_Compressor::compress_file(std::string& filepath) {
   std::string data = read_file(filepath, true);
   if (data.empty()) {
     std::cerr << "No data was read from " << filepath << std::endl;
@@ -44,7 +45,7 @@ void KPCompressor::compress_file(std::string& filepath) {
   }
 }
 
-void KPCompressor::decompress_file(std::string& filepath) {
+void KP_Compressor::decompress_file(std::string& filepath) {
   std::string data = read_file(filepath, true);
   if (data.empty()) {
     std::cerr << "No data was read from " << filepath << std::endl;
@@ -65,7 +66,7 @@ void KPCompressor::decompress_file(std::string& filepath) {
   std::cout << "Decompressed file saved as " << output_filename << std::endl;
 }
 
-int KPCompressor::binary_str_to_int(const std::string& binary_str) {
+int KP_Compressor::binary_str_to_int(const std::string& binary_str) {
   int value = 0;
   for (char ch : binary_str) {
     value = (value << 1) | (ch == '1' ? 1 : 0);
@@ -73,7 +74,7 @@ int KPCompressor::binary_str_to_int(const std::string& binary_str) {
   return value;
 }
 
-std::string KPCompressor::binary_to_str(const std::vector<uint8_t>& bin_data, size_t& offset, int bits) {
+std::string KP_Compressor::binary_to_str(const std::vector<uint8_t>& bin_data, size_t& offset, int bits) {
   std::string binary_str;
   binary_str.reserve(bits);
   for (int i = 0; i < bits; ++i) {
@@ -88,7 +89,7 @@ std::string KPCompressor::binary_to_str(const std::vector<uint8_t>& bin_data, si
   return binary_str;
 }
 
-std::string KPCompressor::int_to_binary_str(int n, int bufsize) {
+std::string KP_Compressor::int_to_binary_str(int n, int bufsize) {
   std::string output;
   output.reserve(bufsize);
   for (int i = bufsize - 1; i >= 0; --i) {
@@ -97,7 +98,7 @@ std::string KPCompressor::int_to_binary_str(int n, int bufsize) {
   return output;
 }
 
-std::vector<uint8_t> KPCompressor::compress(std::string& data) {
+std::vector<uint8_t> KP_Compressor::compress(std::string& data) {
   std::set<char> unique_char(data.begin(), data.end());
   int unique_char_cnt = unique_char.size();
   int bufsize = ceil(log2(unique_char_cnt));
@@ -132,7 +133,7 @@ std::vector<uint8_t> KPCompressor::compress(std::string& data) {
   return compressed_bytes;
 }
 
-std::string KPCompressor::decompress(const std::vector<uint8_t>& bin_data) {
+std::string KP_Compressor::decompress(const std::vector<uint8_t>& bin_data) {
   size_t offset = 0;
 
   std::string unique_char_cnt_str = binary_to_str(bin_data, offset, 8);

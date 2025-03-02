@@ -1,8 +1,8 @@
-#include "KPWindow.hpp"
+#include <kompreshar/KP_Window.hpp>
 
 #include <iostream>
 
-KPWindow::KPWindow() :
+KP_Window::KP_Window() :
 m_btn_filepicker("Select a file", Gtk::FILE_CHOOSER_ACTION_OPEN),
 m_btn_compress("Compress"),
 m_btn_decompress("Decompress") {
@@ -30,18 +30,18 @@ m_btn_decompress("Decompress") {
   m_main_box.pack_start(m_btn_filepicker, Gtk::PACK_SHRINK);
   m_main_box.pack_start(m_control_box, Gtk::PACK_EXPAND_WIDGET);
 
-  m_btn_compress.signal_clicked().connect(sigc::mem_fun(*this, &KPWindow::handle_sig_compress));
-  m_btn_decompress.signal_clicked().connect(sigc::mem_fun(*this, &KPWindow::handle_sig_decompress));
+  m_btn_compress.signal_clicked().connect(sigc::mem_fun(*this, &KP_Window::handle_sig_compress));
+  m_btn_decompress.signal_clicked().connect(sigc::mem_fun(*this, &KP_Window::handle_sig_decompress));
 
   add(m_main_box);
   show_all_children();
 }
 
-KPWindow::~KPWindow() {
+KP_Window::~KP_Window() {
 
 }
 
-void KPWindow::handle_sig_compress() {
+void KP_Window::handle_sig_compress() {
   std::string filename = m_btn_filepicker.get_filename();
   if (!filename.empty()) {
     std::cout << "Compressing file :" << filename << std::endl;
@@ -49,7 +49,7 @@ void KPWindow::handle_sig_compress() {
   }
 }
 
-void KPWindow::handle_sig_decompress() {
+void KP_Window::handle_sig_decompress() {
   std::string filename = m_btn_filepicker.get_filename();
   if (!filename.empty()) {
     std::cout << "Decompressing file :" << filename << std::endl;
