@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-KP_Window::KP_Window() :
-m_btn_filepicker("Select a file", Gtk::FILE_CHOOSER_ACTION_OPEN),
-m_btn_compress("Compress"),
-m_btn_decompress("Decompress") {
+KP_Window::KP_Window()
+  : m_btn_filepicker("Select a file", Gtk::FILE_CHOOSER_ACTION_OPEN),
+  m_btn_compress("Compress"),
+  m_btn_decompress("Decompress") {
   set_title("Kompreshar");
   set_border_width(12);
   set_default_size(350, 0);
@@ -30,29 +30,50 @@ m_btn_decompress("Decompress") {
   m_main_box.pack_start(m_btn_filepicker, Gtk::PACK_SHRINK);
   m_main_box.pack_start(m_control_box, Gtk::PACK_EXPAND_WIDGET);
 
-  m_btn_compress.signal_clicked().connect(sigc::mem_fun(*this, &KP_Window::handle_sig_compress));
-  m_btn_decompress.signal_clicked().connect(sigc::mem_fun(*this, &KP_Window::handle_sig_decompress));
+  m_btn_compress.signal_clicked().connect(
+    sigc::mem_fun(*this, &KP_Window::handle_sig_compress));
+  m_btn_decompress.signal_clicked().connect(
+    sigc::mem_fun(*this, &KP_Window::handle_sig_decompress));
 
   add(m_main_box);
   show_all_children();
 }
 
 KP_Window::~KP_Window() {
-  // Nothing
+  // Nothing to clean up
 }
 
 void KP_Window::handle_sig_compress() {
   std::string filename = m_btn_filepicker.get_filename();
   if (!filename.empty()) {
     std::cout << "Compressing file :" << filename << std::endl;
-    m_compressor.compress_file(filename);
+    bool success = (m_compressor.compress_file(filename) == 0);
+    Gtk::MessageDialog dialog(*this,
+      success ? "File compressed successfully" : "Something went wrong",
+      false,
+      success ? Gtk::MESSAGE_INFO : Gtk::MESSAGE_ERROR,
+      Gtk::BUTTONS_OK);
+    dialog.run();
   }
 }
 
 void KP_Window::handle_sig_decompress() {
   std::string filename = m_btn_filepicker.get_filename();
   if (!filename.empty()) {
+    if (filename.rfind(".kpc") != filename.length() - 4) {
+      Gtk::MessageDialog dialog(*this, "Selected file is not a \'.kpc\' file", false,
+        Gtk::MESSAGE_ERROR, Gtk::BUTTONS_OK);
+      dialog.run();
+      return;
+    }
+
     std::cout << "Decompressing file :" << filename << std::endl;
-    m_compressor.decompress_file(filename);
+    bool success = (m_compressor.decompress_file(filename) == 0);
+    Gtk::MessageDialog dialog(*this,
+      success ? "File decompressed successfully" : "Something went wrong",
+      false,
+      success ? Gtk::MESSAGE_INFO : Gtk::MESSAGE_ERROR,
+      Gtk::BUTTONS_OK);
+    dialog.run();
   }
 }

@@ -30,11 +30,11 @@ bool KP_Compressor::write_file(const std::string& filepath,
   return true;
 }
 
-void KP_Compressor::compress_file(std::string& filepath) {
+bool KP_Compressor::compress_file(std::string& filepath) {
   std::string data = read_file(filepath, true);
   if (data.empty()) {
     std::cerr << "No data was read from " << filepath << std::endl;
-    return;
+    return 1;
   }
 
   std::vector<uint8_t> compressed_bin_data = compress(data);
@@ -42,14 +42,16 @@ void KP_Compressor::compress_file(std::string& filepath) {
 
   if (write_file(output_filename, compressed_bin_data)) {
     std::cout << "Compressed file saved as " << output_filename << std::endl;
+    return 0;
   }
+  return 1;
 }
 
-void KP_Compressor::decompress_file(std::string& filepath) {
+bool KP_Compressor::decompress_file(std::string& filepath) {
   std::string data = read_file(filepath, true);
   if (data.empty()) {
     std::cerr << "No data was read from " << filepath << std::endl;
-    return;
+    return 1;
   }
 
   std::vector<uint8_t> bin_data(data.begin(), data.end());
@@ -59,7 +61,9 @@ void KP_Compressor::decompress_file(std::string& filepath) {
   if (write_file(output_filename,
     std::vector<uint8_t>(decompressed_data.begin(), decompressed_data.end()))) {
     std::cout << "Decompressed file saved as " << output_filename << std::endl;
+    return 0;
   }
+  return 1;
 }
 
 std::vector<uint8_t> KP_Compressor::compress(std::string& data) {

@@ -13,8 +13,8 @@ private:
   std::string decompress(const std::vector<uint8_t>& binary_data);
 
 public:
-  void compress_file(std::string& data);
-  void decompress_file(std::string& data);
+  bool compress_file(std::string& data);
+  bool decompress_file(std::string& data);
 };
 
 #endif // KP_COMPRESSOR_HPP
