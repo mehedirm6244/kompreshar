@@ -53,7 +53,7 @@ cse paina public versity te aaaaaaaaaaaaaaaaaaaaa
   - *ceil(log2(15)) = 4* bits are enough to represent 15 unique characters.
   - The next *(4 x 49) = 196* bits store the compressed data
 
-### Compression Effeciency
+### Compression Efficiency
 - Original size: *49* bytes
 - Compressed size: *41* bytes
 - Compression is more effective when the input has fewer unique characters and more repetitions.

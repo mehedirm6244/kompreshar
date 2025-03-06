@@ -6,7 +6,7 @@ KP_Window::KP_Window() :
 m_btn_filepicker("Select a file", Gtk::FILE_CHOOSER_ACTION_OPEN),
 m_btn_compress("Compress"),
 m_btn_decompress("Decompress") {
-  set_title("Chaap");
+  set_title("Kompreshar");
   set_border_width(12);
   set_default_size(350, 0);
   set_resizable(false);
@@ -19,7 +19,7 @@ m_btn_decompress("Decompress") {
   auto filter = Gtk::FileFilter::create();
   filter->set_name("Text Files");
   filter->add_pattern("*.txt");
-  filter->add_pattern("*.rle");
+  filter->add_pattern("*.kpc");
   m_btn_filepicker.add_filter(filter);
 
   m_btn_compress.get_style_context()->add_class("suggested-action");
@@ -38,7 +38,7 @@ m_btn_decompress("Decompress") {
 }
 
 KP_Window::~KP_Window() {
-
+  // Nothing
 }
 
 void KP_Window::handle_sig_compress() {

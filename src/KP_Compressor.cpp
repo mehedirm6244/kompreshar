@@ -26,7 +26,6 @@ bool KP_Compressor::write_file(const std::string& filepath,
     std::cerr << "Failed to write to file: " << filepath << std::endl;
     return false;
   }
-
   file.write(reinterpret_cast<const char*>(data.data()), data.size());
   return true;
 }
@@ -39,7 +38,8 @@ void KP_Compressor::compress_file(std::string& filepath) {
   }
 
   std::vector<uint8_t> compressed_bin_data = compress(data);
-  std::string output_filename = filepath + ".rle";
+  std::string output_filename = filepath + ".kpc";
+
   if (write_file(output_filename, compressed_bin_data)) {
     std::cout << "Compressed file saved as " << output_filename << std::endl;
   }
@@ -53,111 +53,85 @@ void KP_Compressor::decompress_file(std::string& filepath) {
   }
 
   std::vector<uint8_t> bin_data(data.begin(), data.end());
-  std::string decompressed_data_str = decompress(bin_data);
-  std::string output_filename = filepath.substr(0, filepath.find(".rle")) + "_decompressed.txt";
+  std::string decompressed_data = decompress(bin_data);
+  std::string output_filename = filepath.substr(0, filepath.find(".kpc")) + "_decompressed.txt";
 
-  std::ofstream output_file(output_filename);
-  if (!output_file) {
-    std::cerr << "Failed to open file for writing: " << output_filename << std::endl;
-    return;
+  if (write_file(output_filename,
+    std::vector<uint8_t>(decompressed_data.begin(), decompressed_data.end()))) {
+    std::cout << "Decompressed file saved as " << output_filename << std::endl;
   }
-    
-  output_file << decompressed_data_str;
-  std::cout << "Decompressed file saved as " << output_filename << std::endl;
-}
-
-int KP_Compressor::binary_str_to_int(const std::string& binary_str) {
-  int value = 0;
-  for (char ch : binary_str) {
-    value = (value << 1) | (ch == '1' ? 1 : 0);
-  }
-  return value;
-}
-
-std::string KP_Compressor::binary_to_str(const std::vector<uint8_t>& bin_data, size_t& offset, int bits) {
-  std::string binary_str;
-  binary_str.reserve(bits);
-  for (int i = 0; i < bits; ++i) {
-    if (offset >= bin_data.size() * 8) {
-      break;
-    }
-    uint8_t byte = bin_data[offset / 8];
-    int bit_pos = 7 - (offset % 8);
-    binary_str += ((byte >> bit_pos) & 1) ? '1' : '0';
-    offset++;
-  }
-  return binary_str;
-}
-
-std::string KP_Compressor::int_to_binary_str(int n, int bufsize) {
-  std::string output;
-  output.reserve(bufsize);
-  for (int i = bufsize - 1; i >= 0; --i) {
-    output += ((n >> i) & 1) ? '1' : '0';
-  }
-  return output;
 }
 
 std::vector<uint8_t> KP_Compressor::compress(std::string& data) {
-  std::set<char> unique_char(data.begin(), data.end());
-  int unique_char_cnt = unique_char.size();
-  int bufsize = ceil(log2(unique_char_cnt));
+  std::set<char> unique_chars(data.begin(), data.end());
+  int unique_char_cnt = unique_chars.size();
+  int bit_size = std::max((int)(ceil(log2(unique_char_cnt))), 1);
 
-  std::map<char, std::string> char_map;
-  int current_ch = 0;
-  for (auto ch : unique_char) {
-    char_map[ch] = int_to_binary_str(current_ch++, bufsize);
+  std::map<char, int> char_map;
+  int current_ch_idx = 0;
+  for (auto ch : unique_chars) {
+    char_map[ch] = current_ch_idx++;
   }
 
-  std::string compressed_str;
-  compressed_str += int_to_binary_str(unique_char_cnt, 8);
-  for (char ch : unique_char) {
-    compressed_str += int_to_binary_str(ch, sizeof(ch) * 8);
+  int compressed_size = (1 + unique_char_cnt) * 8 + data.size() * bit_size; // By bits
+  compressed_size = ceil(compressed_size / 8.0); // By bytes
+  std::vector<uint8_t> compressed_data(compressed_size, 0);
+
+  compressed_data[0] = static_cast<uint8_t>(unique_char_cnt);
+  current_ch_idx = 1;
+  for (auto ch : unique_chars) {
+    compressed_data[current_ch_idx++] = ch;
   }
+
+  int compressed_vec_idx = current_ch_idx;
+  int bit_pos = 0;
   for (char ch : data) {
-    compressed_str += char_map[ch];
-  }
-
-  std::vector<uint8_t> compressed_bytes;
-  for (size_t i = 0; i < compressed_str.size(); i += 8) {
-    std::string byte_str = compressed_str.substr(i, 8);
-    uint8_t byte = 0;
-    for (size_t j = 0; j < byte_str.size(); ++j) {
-      if (byte_str[j] == '1') {
-        byte |= (1 << (7 - j));
+    int encoded_value = char_map[ch];
+    for (int i = bit_size - 1; i >= 0; i--) {
+      if ((encoded_value >> i) & 1) {
+        compressed_data[compressed_vec_idx] |= (1 << (7 - bit_pos));
+      }
+      bit_pos++;
+      if (bit_pos == 8) {
+        bit_pos = 0;
+        compressed_vec_idx++;
       }
     }
-    compressed_bytes.push_back(byte);
   }
 
-  return compressed_bytes;
+  return compressed_data;
 }
 
 std::string KP_Compressor::decompress(const std::vector<uint8_t>& bin_data) {
-  size_t offset = 0;
+  int unique_char_cnt = bin_data[0];
+  int bit_size = std::max((int)(ceil(log2(unique_char_cnt))), 1);
 
-  std::string unique_char_cnt_str = binary_to_str(bin_data, offset, 8);
-  int unique_char_cnt = binary_str_to_int(unique_char_cnt_str);
-  int bufsize = ceil(log2(unique_char_cnt));
-
-  std::map<std::string, char> binary_to_char_map;
-  for (int i = 0; i < unique_char_cnt; ++i) {
-    std::string char_binary_str = binary_to_str(bin_data, offset, 8);
-    char ch = static_cast<char>(binary_str_to_int(char_binary_str));
-    std::string binary_code = int_to_binary_str(i, bufsize);
-    binary_to_char_map[binary_code] = ch;
+  std::map<int, char> char_map;
+  for (int i = 1; i <= unique_char_cnt; i++) {
+    char_map[i - 1] = static_cast<char>(bin_data[i]);
   }
 
-  std::string decompressed_data_str;
-  while (offset < bin_data.size() * 8) {
-    std::string binary_code = binary_to_str(bin_data, offset, bufsize);
-    if (binary_to_char_map.find(binary_code) != binary_to_char_map.end()) {
-      decompressed_data_str += binary_to_char_map[binary_code];
+  std::string decompressed_data;
+  int bit_pos = 0;
+  for (int i = unique_char_cnt + 1; i < bin_data.size(); ) {
+    int compressed_code = 0;
+    for (int j = 0; j < bit_size; j++) {
+      if (bit_pos == 8) {
+        bit_pos = 0;
+        i++;
+      }
+      compressed_code = (compressed_code << 1);
+      if (bin_data[i] & (1 << (7 - bit_pos))) {
+        compressed_code++;
+      }
+      bit_pos++;
+    }
+    if (char_map.find(compressed_code) != char_map.end()) {
+      decompressed_data += char_map[compressed_code];
     } else {
-      std::cerr << "Invalid binary code encountered during decompression." << std::endl;
-      break;
+      std::cerr << "Unrecognized compressed code: " << compressed_code << ". Ignoring...\n";
     }
   }
 
-  return decompressed_data_str;
+  return decompressed_data;
 }

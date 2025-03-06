@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, char *argv[]) {
-  auto app = Gtk::Application::create(argc, argv, "org.chaap.app");
+  auto app = Gtk::Application::create(argc, argv, "org.kompreshar.app");
 
   KP_Window window;
   int status = app->run(window);
